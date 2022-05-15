@@ -32,7 +32,7 @@ async function run() {
         // This is not the proper way to query
         // after learning more about mongodb. use aggregate lookup, pipeline, match, group
         app.get('/available', async (req, res) => {
-            const date = req.query.date || 'March 21, 2001';
+            const date = req.query.date;
 
             // step:1 -get all services
             const services = await serviceCollection.find().toArray();
@@ -44,9 +44,9 @@ async function run() {
             // step:3 for each service, f
             services.forEach(service => {
                 // step 4:ind bookings for that service
-                const serviceBookings = bookings.filter(b => b.treatment === service.name);
+                const serviceBookings = bookings.filter(book => book.treatment === service.name);
                 // step 5: select slots for the service Bookings: 
-                const bookedSlots = serviceBookings.map(s => s.slot);
+                const bookedSlots = serviceBookings.map(book => book.slot);
                 // step 6: select those slots that are not included in bookedSlots
                 const available = service.slots.filter(s => !bookedSlots.includes(s))
                 service.available = available;
@@ -63,6 +63,20 @@ async function run() {
          * app.patch ('/booking:id') -- means to update a specific booking by id
          * app.delete ('/booking:id') -- means to delete a specific booking by id
         */
+
+        app.get('/booking', async (req, res) => {
+            const patient = req.query.patient;
+            const query = { patient: patient };
+            const bookings = await bookingCollection.find(query).toArray();
+            res.send(bookings)
+        })
+
+        // app.get('/booking', async (req, res) => {
+        //     const patient = req.query.patient;
+        //     const query = { patient: patient };
+        //     const bookings = await bookingCollection.find(query).toArray();
+        //     res.send(bookings);
+        // })
 
         app.post('/booking', async (req, res) => {
             const booking = req.body;
